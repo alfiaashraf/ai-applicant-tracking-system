@@ -1,0 +1,9 @@
+John Doe
+
+Skills:
+Python
+FastAPI
+SQL
+Git
+
+Built backend APIs using FastAPI and PostgreSQL.

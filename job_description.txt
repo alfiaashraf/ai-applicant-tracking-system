@@ -1,0 +1,10 @@
+We are looking for a Python Backend Developer.
+
+Required Skills:
+Python
+FastAPI
+SQL
+REST APIs
+Git
+
+Experience with machine learning is a plus.

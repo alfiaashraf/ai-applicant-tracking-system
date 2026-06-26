@@ -1,0 +1,10 @@
+Alice
+
+Skills:
+Python
+Machine Learning
+SQL
+FastAPI
+Git
+
+Created AI systems and backend services.
