@@ -18,3 +18,7 @@ uploads/
 
 .cache/
 .huggingface/
+
+node_modules/
+
+resumes/
