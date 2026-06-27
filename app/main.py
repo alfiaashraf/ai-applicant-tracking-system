@@ -1,3 +1,4 @@
+from app.database import Base, engine
 import logging
 from contextlib import asynccontextmanager
 
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
         ),
         lifespan=lifespan,
     )
+    Base.metadata.create_all(bind=engine)
 
     app.add_middleware(
         CORSMiddleware,
