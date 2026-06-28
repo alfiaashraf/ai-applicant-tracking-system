@@ -1,10 +1,10 @@
-import logging
 import uuid
+import logging
 
 from app.database import SessionLocal
-from app.core.exceptions import JobNotFoundError
 from app.models.job import Job
 from app.schemas.job import JobCreate, JobResponse
+from app.core.exceptions import JobNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ def create_job(data: JobCreate) -> JobResponse:
     try:
         job = Job(
             id=str(uuid.uuid4()),
-            title=data.title,
-            description=data.description,
+            title=data.title.strip(),
+            description=data.description.strip(),
         )
 
         db.add(job)
