@@ -61,15 +61,10 @@ def _rank_candidates_sync(
     tfidf_scores = _normalize_scores(
         {name: float(score) for name, score in tfidf_results}
     )
-    semantic_results = semantic_rank(
-        job_description,
-        resumes,
-        model_name=settings.embedding_model,
-    )
-
-    semantic_scores = _normalize_scores(
-        {name: float(score) for name, score in semantic_results}
-    )
+    semantic_scores = {
+    filename: 0.0
+    for filename in resumes.keys()
+    }
 
     job_skills = set(extract_skills(job_description))
     rankings: list[RankingItem] = []
