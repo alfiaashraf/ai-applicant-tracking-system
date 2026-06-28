@@ -1,8 +1,9 @@
 import logging
+import uuid
 
+from app.database import SessionLocal
 from app.core.exceptions import JobNotFoundError
 from app.models.job import Job
-from app.repositories.job_repository import InMemoryJobRepository, get_job_repository
 from app.schemas.job import JobCreate, JobResponse
 
 logger = logging.getLogger(__name__)
@@ -17,39 +18,54 @@ def _to_response(job: Job) -> JobResponse:
     )
 
 
-def create_job(
-    data: JobCreate,
-    repository: InMemoryJobRepository | None = None,
-) -> JobResponse:
-    repository = repository or get_job_repository()
-    job = repository.create(title=data.title, description=data.description)
-    logger.info("Created job '%s' (%s)", job.title, job.id)
-    return _to_response(job)
+def create_job(data: JobCreate) -> JobResponse:
+    db = SessionLocal()
+
+    try:
+        job = Job(
+            id=str(uuid.uuid4()),
+            title=data.title,
+            description=data.description,
+        )
+
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+
+        logger.info("Created job '%s' (%s)", job.title, job.id)
+
+        return _to_response(job)
+
+    finally:
+        db.close()
 
 
-def list_jobs(
-    repository: InMemoryJobRepository | None = None,
-) -> list[JobResponse]:
-    repository = repository or get_job_repository()
-    return [_to_response(job) for job in repository.get_all()]
+def list_jobs() -> list[JobResponse]:
+    db = SessionLocal()
+
+    try:
+        jobs = db.query(Job).order_by(Job.created_at.desc()).all()
+        return [_to_response(job) for job in jobs]
+
+    finally:
+        db.close()
 
 
-def get_job(
-    job_id: str,
-    repository: InMemoryJobRepository | None = None,
-) -> JobResponse:
-    repository = repository or get_job_repository()
-    job = repository.get_by_id(job_id)
+def get_job(job_id: str) -> JobResponse:
+    db = SessionLocal()
 
-    if job is None:
-        raise JobNotFoundError(f"Job '{job_id}' not found.")
+    try:
+        job = db.query(Job).filter(Job.id == job_id).first()
 
-    return _to_response(job)
+        if job is None:
+            raise JobNotFoundError(f"Job '{job_id}' not found.")
+
+        return _to_response(job)
+
+    finally:
+        db.close()
 
 
-def get_job_description(
-    job_id: str,
-    repository: InMemoryJobRepository | None = None,
-) -> str:
-    job = get_job(job_id, repository)
+def get_job_description(job_id: str) -> str:
+    job = get_job(job_id)
     return f"{job.title}\n\n{job.description}"
