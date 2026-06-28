@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "./services/api";
 
 import JobPanel from "./components/JobPanel";
@@ -11,18 +11,46 @@ function App() {
   const [files, setFiles] = useState([]);
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [selectedJobId, setSelectedJobId] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+
+  useEffect(() => {
+    loadJobs();
+  }, []);
+
+  async function loadJobs() {
+    try {
+      const response = await api.get("/jobs");
+
+      setJobs(response.data);
+
+      if (response.data.length > 0) {
+        setSelectedJobId(response.data[0].id);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   async function saveJob() {
     try {
       const response = await api.post("/jobs", {
-        title: "Software Engineer",
+        title: jobTitle,
         description: jobDescription,
       });
 
+      await loadJobs();
+
       setJobId(response.data.id);
+      setSelectedJobId(response.data.id);
+
       alert("Job Created Successfully!");
     } catch (error) {
       console.error(error);
+
+      setJobTitle("");
+      setJobDescription("");
 
       if (error.response) {
         alert(error.response.data.detail || "Backend Error");
@@ -33,8 +61,8 @@ function App() {
   }
 
   async function rankCandidates() {
-    if (!jobId) {
-      alert("Create a job first.");
+    if (!selectedJobId) {
+      alert("Select a job first.");
       return;
     }
 
@@ -48,7 +76,7 @@ function App() {
 
       const formData = new FormData();
 
-      formData.append("job_id", jobId);
+      formData.append("job_id", selectedJobId);
 
       files.forEach((file) => {
         formData.append("files", file);
@@ -97,19 +125,27 @@ function App() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          <JobPanel
-            jobDescription={jobDescription}
-            setJobDescription={setJobDescription}
-            saveJob={saveJob}
-            jobId={jobId}
-          />
+        <JobPanel
+          jobTitle={jobTitle}
+          setJobTitle={setJobTitle}
+          jobDescription={jobDescription}
+          setJobDescription={setJobDescription}
+          saveJob={saveJob}
+          jobId={jobId}
+          jobs={jobs}
+          selectedJobId={selectedJobId}
+          setSelectedJobId={setSelectedJobId}
+        />
 
-          <UploadPanel
-            files={files}
-            setFiles={setFiles}
-            rankCandidates={rankCandidates}
-            loading={loading}
-          />
+        <UploadPanel
+          files={files}
+          setFiles={setFiles}
+          rankCandidates={rankCandidates}
+          loading={loading}
+          selectedJobTitle={
+            jobs.find((job) => job.id === selectedJobId)?.title
+          }
+        />
 
           <RankingPanel
             rankings={rankings}
